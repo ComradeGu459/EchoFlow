@@ -3,6 +3,7 @@ import "./import-workflow.test.js";
 import "./analytics-center.test.js";
 import "./ai-client.test.js";
 import "./ai-registry.test.js";
+import "./cloudflare-config.test.js";
 import "./flashcards-review.test.js";
 import "./learning-space.test.js";
 import "./player-workspace.test.js";
