@@ -36,3 +36,8 @@ export function buildCueCardDraft({ cue, material, type = "表达卡" }) {
     difficultyTag: cue.difficultyTag || "四级",
   };
 }
+
+export function shouldScrollCueIntoView(containerRect, cueRect) {
+  if (!containerRect || !cueRect) return false;
+  return cueRect.top < containerRect.top || cueRect.bottom > containerRect.bottom;
+}

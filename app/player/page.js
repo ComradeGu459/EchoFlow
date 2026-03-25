@@ -1,4 +1,4 @@
-export { default } from "../screens/player-screen-v5";
+export { default } from "../screens/player-screen-v6";
 /*
 
 import { useLearningStore } from "../learning-store";

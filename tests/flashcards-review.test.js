@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 
 import {
   applyReviewFeedback,
+  buildFlashcardOverview,
   buildFlashcardLibraryItems,
   buildTodayReviewQueue,
   filterFlashcards,
@@ -111,6 +112,15 @@ run("buildTodayReviewQueue uses only actually due cards", () => {
   assert.equal(queue.length, 2);
   assert.equal(queue[0].id, "c3");
   assert.equal(queue[1].id, "c1");
+});
+
+run("buildFlashcardOverview derives real dashboard metrics from cards", () => {
+  const overview = buildFlashcardOverview(CARDS, "2026-03-25T12:00:00.000Z");
+
+  assert.equal(overview.dueCount, 2);
+  assert.equal(overview.newTodayCount, 0);
+  assert.equal(overview.masteredCount, 1);
+  assert.equal(overview.typeCounts["短语卡"], 1);
 });
 
 run("applyReviewFeedback schedules the next review from real feedback", () => {

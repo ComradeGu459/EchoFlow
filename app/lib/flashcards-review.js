@@ -47,6 +47,22 @@ export function buildTodayReviewQueue(cards, now) {
     .sort((left, right) => new Date(left.nextReviewAt) - new Date(right.nextReviewAt));
 }
 
+export function buildFlashcardOverview(cards, now) {
+  const nowDate = new Date(now).toDateString();
+  const typeCounts = {};
+
+  cards.forEach((card) => {
+    typeCounts[card.type] = (typeCounts[card.type] || 0) + 1;
+  });
+
+  return {
+    dueCount: buildTodayReviewQueue(cards, now).length,
+    newTodayCount: cards.filter((card) => new Date(card.createdAt).toDateString() === nowDate).length,
+    masteredCount: cards.filter((card) => card.status === "已掌握").length,
+    typeCounts,
+  };
+}
+
 export function applyReviewFeedback(card, feedback, now) {
   const nextReviewMap = {
     forgot: { status: "待复习", reviewLevel: 0, nextReviewAt: addHours(now, 4) },

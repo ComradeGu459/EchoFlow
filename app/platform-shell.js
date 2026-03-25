@@ -32,6 +32,10 @@ export default function PlatformShell({ children }) {
     }
   };
   const isFocusPage = pathname === "/player" || pathname === "/practice";
+  const isPlayerPage = pathname === "/player";
+  const isLibraryPage = pathname === "/library";
+  const isCardsPage = pathname === "/cards";
+  const isProgressPage = pathname === "/progress";
   const collapsed = state.ui.sidebarCollapsed;
   const currentNavItem = NAV_ITEMS.find((item) => item.href === pathname) || NAV_ITEMS[0];
   const isImportPage = pathname === "/import";
@@ -45,7 +49,7 @@ export default function PlatformShell({ children }) {
 
   return (
     <div
-      className={`platform-shell${collapsed ? " sidebar-collapsed" : " sidebar-expanded"}${isFocusPage ? " focus-page" : ""}`}
+      className={`platform-shell${collapsed ? " sidebar-collapsed" : " sidebar-expanded"}${isFocusPage ? " focus-page" : ""}${isPlayerPage ? " player-page" : ""}${isLibraryPage ? " library-page" : ""}${isCardsPage ? " cards-page" : ""}${isProgressPage ? " progress-page" : ""}`}
     >
       <aside className={`platform-sidebar${collapsed ? " collapsed" : " expanded"}`}>
         <div className="sidebar-top">

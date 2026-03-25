@@ -6,6 +6,7 @@ import {
   clampSubtitleFontSize,
   findActiveCueIdAtTime,
   getAdjacentCueId,
+  shouldScrollCueIntoView,
 } from "../app/lib/player-workspace.js";
 
 function run(name, fn) {
@@ -58,4 +59,30 @@ run("buildCueCardDraft creates a sentence-derived flashcard payload", () => {
   assert.equal(payload.type, "表达卡");
   assert.equal(payload.meaning, "你好吗？");
   assert.match(payload.note, /Daily Clip/);
+});
+
+run("shouldScrollCueIntoView only scrolls when the active cue is outside the viewport", () => {
+  assert.equal(
+    shouldScrollCueIntoView(
+      { top: 100, bottom: 600 },
+      { top: 180, bottom: 240 },
+    ),
+    false,
+  );
+
+  assert.equal(
+    shouldScrollCueIntoView(
+      { top: 100, bottom: 600 },
+      { top: 40, bottom: 90 },
+    ),
+    true,
+  );
+
+  assert.equal(
+    shouldScrollCueIntoView(
+      { top: 100, bottom: 600 },
+      { top: 610, bottom: 690 },
+    ),
+    true,
+  );
 });

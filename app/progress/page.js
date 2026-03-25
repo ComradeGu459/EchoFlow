@@ -1,1 +1,1 @@
-export { default } from "../screens/progress-screen-v5";
+export { default } from "../screens/progress-screen-v6";
