@@ -34,3 +34,20 @@ run("Cloudflare worker identity is consistent across package and wrangler config
   assert.equal(nameMatch[1], "echoflowpro");
   assert.equal(serviceMatch[1], "echoflowpro");
 });
+
+run("Cloudflare build tools are declared in package.json", () => {
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(root, "package.json"), "utf8"),
+  );
+
+  assert.equal(packageJson.scripts["cf:build"], "npx opennextjs-cloudflare build");
+  assert.equal(packageJson.scripts["cf:deploy"], "npx opennextjs-cloudflare deploy");
+  assert.ok(
+    packageJson.devDependencies?.["@opennextjs/cloudflare"],
+    "package.json must include @opennextjs/cloudflare as a devDependency",
+  );
+  assert.ok(
+    packageJson.devDependencies?.wrangler,
+    "package.json must include wrangler as a devDependency",
+  );
+});
