@@ -4,6 +4,7 @@ import {
   buildCueCardDraft,
   clampSplitRatio,
   clampSubtitleFontSize,
+  formatCueEnglishForDisplay,
   findActiveCueIdAtTime,
   getAdjacentCueId,
   shouldScrollCueIntoView,
@@ -84,5 +85,16 @@ run("shouldScrollCueIntoView only scrolls when the active cue is outside the vie
       { top: 610, bottom: 690 },
     ),
     true,
+  );
+});
+
+run("formatCueEnglishForDisplay improves tightly packed subtitles for display only", () => {
+  assert.equal(
+    formatCueEnglishForDisplay("didyousetyouralarmfortomorrow"),
+    "did you set your alarm for tomorrow",
+  );
+  assert.equal(
+    formatCueEnglishForDisplay("yeahit'ssetfor7:15"),
+    "yeah it's set for 7:15",
   );
 });

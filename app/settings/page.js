@@ -1,4 +1,4 @@
-export { default } from "../screens/settings-screen-v4";
+export { default } from "../screens/settings-screen-v5";
 /*
 
 import { useState } from "react";

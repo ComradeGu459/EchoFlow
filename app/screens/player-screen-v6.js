@@ -7,6 +7,7 @@ import MediaPlayerSurface from "../components/media-player-surface";
 import {
   buildCueCardDraft,
   clampSubtitleFontSize,
+  formatCueEnglishForDisplay,
   shouldScrollCueIntoView,
 } from "../lib/player-workspace";
 import { formatTime } from "../lib/platform-model";
@@ -364,7 +365,7 @@ export default function PlayerScreenV6() {
                   </span>
                   <div className="reference-subtitle-copy">
                     <strong style={{ fontSize: `${subtitleFontSize}px` }}>
-                      {cue.english.split(" ").map((word, index) => {
+                      {formatCueEnglishForDisplay(cue.english).split(" ").map((word, index) => {
                         const clean = word.toLowerCase().replace(/[^a-z']/gi, "");
                         return (
                           <span

@@ -190,11 +190,7 @@ body {
 .platform-shell.library-page .sidebar-toggle,
 .platform-shell.cards-page .sidebar-toggle,
 .platform-shell.progress-page .sidebar-toggle {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  font-size: 10px;
-  box-shadow: none;
+  display: none;
 }
 
 .platform-shell.library-page .brand-symbol,
@@ -2327,6 +2323,10 @@ textarea:focus {
   flex: 1 1 auto;
   overflow: auto;
   padding: 16px 20px;
+  margin: 12px 18px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(233, 238, 247, 0.96);
+  background: #fff;
 }
 
 .reference-subtitle-row {
@@ -3354,6 +3354,19 @@ textarea:focus {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.settings-storage-details {
+  border-radius: 18px;
+  border: 1px solid #dbe4f1;
+  background: #fff;
+}
+
+.settings-storage-details summary {
+  cursor: pointer;
+  padding: 16px 18px;
+  font-weight: 700;
+  color: #223453;
 }
 
 .pill-tag.selected {
