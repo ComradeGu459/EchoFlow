@@ -1,5 +1,4 @@
 ﻿import "./globals.css";
-import "./platform-visual-rebuild.css";
 import PlatformShell from "./platform-shell";
 import Providers from "./providers";
 

@@ -9,11 +9,12 @@ export default function DashboardScreen() {
 
   return (
     <div className="page-grid dashboard-grid">
-      <section className="ios-card section-card hero-card">
+      {/* ── Hero stats ── */}
+      <section className="ios-card section-card hero-card dash-hero">
         <div className="section-top">
           <div>
             <h2>今日学习</h2>
-            <p>保持素材学习、跟读、听写和卡片复习的完整闭环。</p>
+            <p>保持素材学习、跟读和卡片复习的完整闭环。</p>
           </div>
           <Link className="ios-button primary button-link" href="/player">
             继续学习
@@ -22,7 +23,7 @@ export default function DashboardScreen() {
         <div className="stats-grid">
           <div className="metric-card">
             <strong>{dashboardStats.studyMinutes}</strong>
-            <span>今日学习时长 / 分钟</span>
+            <span>今日学习时长（分钟）</span>
           </div>
           <div className="metric-card">
             <strong>{dashboardStats.materialsStudied}</strong>
@@ -42,22 +43,23 @@ export default function DashboardScreen() {
           </div>
           <div className="metric-card">
             <strong>{dashboardStats.aiRuns}</strong>
-            <span>分析使用次数</span>
+            <span>AI 分析次数</span>
           </div>
         </div>
       </section>
 
+      {/* ── Current material ── */}
       <section className="ios-card section-card">
         <div className="section-top">
           <div>
             <h2>当前学习流</h2>
-            <p>当前素材、当前句子和下一步动作都在这里。</p>
+            <p>当前素材和下一步动作。</p>
           </div>
         </div>
         <div className="journey-card">
           <strong>{currentMaterial?.title || "未选择素材"}</strong>
-          <p>{currentMaterial?.description || "先去素材库导入一段视频或字幕。"}</p>
-          {currentMaterial ? (
+          <p>{currentMaterial?.description || "先去学习空间导入一段视频或字幕。"}</p>
+          {currentMaterial && (
             <div className="stat-pills">
               <span className="status-badge" data-tone={getTone(currentMaterial.status)}>
                 {currentMaterial.status}
@@ -69,28 +71,26 @@ export default function DashboardScreen() {
                 {currentMaterial.learningGoal}
               </span>
             </div>
-          ) : null}
+          )}
           <div className="button-row">
             <Link className="ios-button secondary button-link" href="/library">
-              去素材库
-            </Link>
-            <Link className="ios-button secondary button-link" href="/practice">
-              去跟读听写
+              学习空间
             </Link>
             <Link className="ios-button ghost button-link" href="/cards">
-              去卡片中心
+              闪卡库
             </Link>
           </div>
         </div>
       </section>
 
+      {/* ── Due cards ── */}
       <section className="ios-card section-card">
         <div className="section-top">
           <div>
             <h2>今日待复习</h2>
-            <p>使用简化 SRS，优先复习到期卡片。</p>
+            <p>基于本地 SRS 调度，优先复习到期卡片。</p>
           </div>
-          <span className="status-badge" data-tone={dueCards.length ? "learning" : "success"}>
+          <span className="status-badge" data-tone={dueCards.length ? "warning" : "success"}>
             {dueCards.length} 张
           </span>
         </div>
@@ -100,9 +100,7 @@ export default function DashboardScreen() {
               <div className="list-row" key={card.id}>
                 <div>
                   <strong>{card.title}</strong>
-                  <p>
-                    {card.type} · {card.difficultyTag}
-                  </p>
+                  <p>{card.type} · {card.difficultyTag}</p>
                 </div>
                 <span className="status-badge" data-tone={getTone(card.status)}>
                   {card.status}
@@ -113,13 +111,21 @@ export default function DashboardScreen() {
             <div className="empty-note">当前没有待复习卡片。</div>
           )}
         </div>
+        {dueCards.length > 0 && (
+          <div className="button-row" style={{ marginTop: "var(--s4)" }}>
+            <Link className="ios-button primary button-link" href="/practice">
+              开始复习
+            </Link>
+          </div>
+        )}
       </section>
 
+      {/* ── Recent logs ── */}
       <section className="ios-card section-card">
         <div className="section-top">
           <div>
             <h2>最近轨迹</h2>
-            <p>帮助你快速回到上一段学习上下文。</p>
+            <p>快速回到上一段学习上下文。</p>
           </div>
         </div>
         <div className="list-stack">

@@ -19,10 +19,10 @@ const FONT_SIZES = [
   { value: 18, label: "中" },
   { value: 21, label: "大" },
 ];
-const CONTENT_TABS = [
-  { id: "subtitles", label: "字幕文本" },
-  { id: "analysis", label: "AI 深度讲解" },
-  { id: "pronunciation", label: "发音诊断" },
+const TOOL_TABS = [
+  { id: "word",         label: "词汇" },
+  { id: "analysis",    label: "AI 讲解" },
+  { id: "pronunciation", label: "发音" },
 ];
 
 export default function PlayerScreenV6() {
@@ -45,6 +45,7 @@ export default function PlayerScreenV6() {
     runSpeechTranscription,
     toggleRecording,
   } = usePlatformStore();
+
   const playerRef = useRef(null);
   const subtitleListRef = useRef(null);
   const cueRefs = useRef(new Map());
@@ -52,7 +53,8 @@ export default function PlayerScreenV6() {
   const saveProgressRef = useRef({ seconds: 0 });
   const restoredMaterialIdRef = useRef("");
   const loopGuardRef = useRef(0);
-  const [activeTab, setActiveTab] = useState("subtitles");
+
+  const [toolTab, setToolTab] = useState("word");
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -65,11 +67,12 @@ export default function PlayerScreenV6() {
   const subtitleFontSize = clampSubtitleFontSize(playerUi.subtitleFontSize);
   const loopCurrentCue = playerUi.loopCurrentCue;
   const showTranslation = playerUi.showTranslation;
+
   const currentRecording = state.practice.recordings.find(
-    (recording) => recording.materialId === currentMaterial?.id,
+    (r) => r.materialId === currentMaterial?.id,
   );
   const currentCueIndex = currentCue
-    ? Math.max(0, currentCues.findIndex((cue) => cue.id === currentCue.id))
+    ? Math.max(0, currentCues.findIndex((c) => c.id === currentCue.id))
     : 0;
   const progressPercent = currentMaterial?.durationMinutes
     ? Math.min(100, Math.round((currentTime / (currentMaterial.durationMinutes * 60)) * 100))
@@ -85,22 +88,20 @@ export default function PlayerScreenV6() {
   }, [currentMaterial?.id]);
 
   useEffect(() => {
-    if (!currentCue?.id || activeTab !== "subtitles") return;
+    if (!currentCue?.id) return;
     const container = subtitleListRef.current;
     const target = cueRefs.current.get(currentCue.id);
     if (!container || !target) return;
-
     const shouldScroll = shouldScrollCueIntoView(
       container.getBoundingClientRect(),
       target.getBoundingClientRect(),
     );
     if (!shouldScroll) return;
-
     target.scrollIntoView({
       block: cueChangeSourceRef.current === "manual" ? "center" : "nearest",
       behavior: cueChangeSourceRef.current === "manual" ? "smooth" : "auto",
     });
-  }, [activeTab, currentCue?.id]);
+  }, [currentCue?.id]);
 
   useEffect(() => () => {
     if (ttsAudioUrl) URL.revokeObjectURL(ttsAudioUrl);
@@ -108,7 +109,6 @@ export default function PlayerScreenV6() {
 
   function handlePlayerReady() {
     setIsReady(true);
-
     if (
       currentMaterial?.lastPositionSeconds > 0 &&
       restoredMaterialIdRef.current !== currentMaterial.id
@@ -147,23 +147,19 @@ export default function PlayerScreenV6() {
   }
 
   function seekToCue(cueId, source = "manual") {
-    const cue = currentCues.find((item) => item.id === cueId);
+    const cue = currentCues.find((c) => c.id === cueId);
     if (!cue) return;
     cueChangeSourceRef.current = source;
     selectCue(cueId);
-    const targetTime = cue.start + (currentMaterial?.subtitleOffset || 0);
-    playerRef.current?.seekTo(targetTime);
-    setCurrentTime(targetTime);
+    const t = cue.start + (currentMaterial?.subtitleOffset || 0);
+    playerRef.current?.seekTo(t);
+    setCurrentTime(t);
   }
 
   function goRelative(delta) {
     if (!currentCue) return;
-    const nextIndex = Math.min(
-      currentCues.length - 1,
-      Math.max(0, currentCueIndex + delta),
-    );
-    const target = currentCues[nextIndex];
-    if (target) seekToCue(target.id, "manual");
+    const next = currentCues[Math.min(currentCues.length - 1, Math.max(0, currentCueIndex + delta))];
+    if (next) seekToCue(next.id, "manual");
   }
 
   async function handleAiSpeech() {
@@ -195,12 +191,8 @@ export default function PlayerScreenV6() {
         <h2>还没有可学习的素材</h2>
         <p>先去导入页导入视频和字幕，播放器不会展示假视频或假字幕。</p>
         <div className="button-row">
-          <Link className="ios-button primary button-link" href="/import">
-            去导入素材
-          </Link>
-          <Link className="ios-button ghost button-link" href="/library">
-            返回学习空间
-          </Link>
+          <Link className="ios-button primary button-link" href="/import">去导入素材</Link>
+          <Link className="ios-button ghost button-link" href="/library">返回学习空间</Link>
         </div>
       </section>
     );
@@ -208,30 +200,31 @@ export default function PlayerScreenV6() {
 
   return (
     <div className="player-reference-shell">
+      {/* ── Topbar ── */}
       <section className="player-reference-topbar">
         <div className="player-reference-breadcrumb">
-          <Link className="player-back-link" href="/library">
-            返回
-          </Link>
+          <Link className="player-back-link" href="/library">← 返回</Link>
           <div>
             <h2>{currentMaterial.title}</h2>
             <p>
-              {currentMaterial.sourceMediaKind === "youtube" ? "youtube" : "local"} ·{" "}
-              {currentMaterial.topic || "Topic"} · {currentMaterial.difficulty} · {progressLabel}
+              {currentMaterial.sourceMediaKind === "youtube" ? "YouTube" : "本地"} ·{" "}
+              {currentMaterial.topic || "未分类"} · {currentMaterial.difficulty} · {progressLabel}
             </p>
           </div>
         </div>
-
         <div className="player-reference-progress">
           <span>学习进度 {progressPercent}%</span>
-          <p>当前训练第 {learningProgressLabel}</p>
+          <p>第 {learningProgressLabel}</p>
           <div className="player-reference-progressbar">
             <span style={{ width: `${progressPercent}%` }} />
           </div>
         </div>
       </section>
 
+      {/* ── 3-column stage ── */}
       <div className="player-reference-stage">
+
+        {/* Col 1 — Video + controls */}
         <section className="player-reference-main">
           <div className="player-reference-video-card">
             <MediaPlayerSurface
@@ -256,84 +249,14 @@ export default function PlayerScreenV6() {
             >
               单句循环{loopCurrentCue ? "开" : "关"}
             </button>
-            <button
-              className="mode-chip"
-              disabled={!resolvedAiRoutes.study_analysis}
-              type="button"
-              onClick={() => runAiAnalysis("current")}
-            >
-              AI 引擎就绪
-            </button>
             <span className="mode-chip plain">第 {learningProgressLabel}</span>
           </div>
-
-          {activeTab === "analysis" ? (
-            <section className="player-analysis-panel">
-              <div className="section-top">
-                <div>
-                  <h2>AI 深度讲解</h2>
-                  <p>基于当前句和素材上下文生成，不会在未配置时显示假内容。</p>
-                </div>
-                <button
-                  className="ios-button secondary"
-                  disabled={!resolvedAiRoutes.study_analysis}
-                  type="button"
-                  onClick={() => runAiAnalysis("current")}
-                >
-                  重新分析
-                </button>
-              </div>
-              {state.analytics.lastAiResult ? (
-                <pre className="assistant-output">{state.analytics.lastAiResult}</pre>
-              ) : (
-                <div className="empty-note">还没有 AI 分析结果，点击上方按钮后才会生成真实内容。</div>
-              )}
-            </section>
-          ) : null}
-
-          {activeTab === "pronunciation" ? (
-            <section className="player-analysis-panel">
-              <div className="section-top">
-                <div>
-                  <h2>发音诊断</h2>
-                  <p>只使用真实录音和真实转写结果，不生成演示波形。</p>
-                </div>
-                <div className="button-row">
-                  <button className="ios-button secondary" type="button" onClick={toggleRecording}>
-                    {state.practice.recordingState === "recording" ? "结束录音" : "开始录音"}
-                  </button>
-                  <button
-                    className="ios-button ghost"
-                    disabled={!resolvedAiRoutes.speech_in || !currentRecording || isTranscribing}
-                    type="button"
-                    onClick={handleAiTranscription}
-                  >
-                    {isTranscribing ? "转写中..." : "AI 转写"}
-                  </button>
-                </div>
-              </div>
-              {currentRecording ? <audio controls src={currentRecording.url} /> : null}
-              {state.practice.aiTranscription ? (
-                <pre className="assistant-output">{state.practice.aiTranscription}</pre>
-              ) : (
-                <div className="empty-note">先录一段真实跟读音频，这里才会出现诊断结果。</div>
-              )}
-            </section>
-          ) : null}
         </section>
 
+        {/* Col 2 — Subtitle list */}
         <aside className="player-reference-sidebar">
           <div className="player-reference-tabs">
-            {CONTENT_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                className={`reference-tab${activeTab === tab.id ? " active" : ""}`}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--c-text2)" }}>字幕</span>
             <div className="reference-font-controls">
               {FONT_SIZES.map((item) => (
                 <button
@@ -348,51 +271,38 @@ export default function PlayerScreenV6() {
             </div>
           </div>
 
-          {activeTab === "subtitles" ? (
-            <div className="reference-subtitle-list" ref={subtitleListRef}>
-              {currentCues.map((cue) => (
-                <button
-                  key={cue.id}
-                  className={`reference-subtitle-row${cue.id === currentCue?.id ? " active" : ""}`}
-                  ref={(node) => {
-                    if (node) cueRefs.current.set(cue.id, node);
-                  }}
-                  type="button"
-                  onClick={() => seekToCue(cue.id, "manual")}
-                >
-                  <span className="reference-subtitle-time">
-                    {formatTime(cue.start + (currentMaterial.subtitleOffset || 0))}
-                  </span>
-                  <div className="reference-subtitle-copy">
-                    <strong style={{ fontSize: `${subtitleFontSize}px` }}>
-                      {formatCueEnglishForDisplay(cue.english).split(" ").map((word, index) => {
-                        const clean = word.toLowerCase().replace(/[^a-z']/gi, "");
-                        return (
-                          <span
-                            key={`${cue.id}-${index}`}
-                            className={`reference-word${state.selectedWord === clean ? " active" : ""}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              selectWord(clean);
-                            }}
-                          >
-                            {word}{" "}
-                          </span>
-                        );
-                      })}
-                    </strong>
-                    {showTranslation && cue.chinese ? <p>{cue.chinese}</p> : null}
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="reference-tab-empty">
-              {activeTab === "analysis"
-                ? "左侧显示 AI 深度讲解。"
-                : "左侧显示发音诊断与转写结果。"}
-            </div>
-          )}
+          <div className="reference-subtitle-list" ref={subtitleListRef}>
+            {currentCues.map((cue) => (
+              <button
+                key={cue.id}
+                className={`reference-subtitle-row${cue.id === currentCue?.id ? " active" : ""}`}
+                ref={(node) => { if (node) cueRefs.current.set(cue.id, node); }}
+                type="button"
+                onClick={() => seekToCue(cue.id, "manual")}
+              >
+                <span className="reference-subtitle-time">
+                  {formatTime(cue.start + (currentMaterial.subtitleOffset || 0))}
+                </span>
+                <div className="reference-subtitle-copy">
+                  <strong style={{ fontSize: `${subtitleFontSize}px` }}>
+                    {formatCueEnglishForDisplay(cue.english).split(" ").map((word, i) => {
+                      const clean = word.toLowerCase().replace(/[^a-z']/gi, "");
+                      return (
+                        <span
+                          key={`${cue.id}-${i}`}
+                          className={`reference-word${state.selectedWord === clean ? " active" : ""}`}
+                          onClick={(e) => { e.stopPropagation(); selectWord(clean); }}
+                        >
+                          {word}{" "}
+                        </span>
+                      );
+                    })}
+                  </strong>
+                  {showTranslation && cue.chinese ? <p>{cue.chinese}</p> : null}
+                </div>
+              </button>
+            ))}
+          </div>
 
           <div className="reference-side-actions">
             <button
@@ -407,32 +317,124 @@ export default function PlayerScreenV6() {
               type="button"
               onClick={() =>
                 currentCue &&
-                addCard(
-                  buildCueCardDraft({
-                    cue: currentCue,
-                    material: currentMaterial,
-                    type: "表达卡",
-                  }),
-                )
+                addCard(buildCueCardDraft({ cue: currentCue, material: currentMaterial, type: "表达卡" }))
               }
             >
               加入闪卡
             </button>
           </div>
         </aside>
+
+        {/* Col 3 — Tools */}
+        <aside className="player-reference-sidebar">
+          <div className="player-reference-tabs">
+            {TOOL_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                className={`reference-tab${toolTab === tab.id ? " active" : ""}`}
+                type="button"
+                onClick={() => setToolTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Word tab */}
+          {toolTab === "word" && (
+            <div style={{ padding: "var(--s3) var(--s4)", flex: 1, overflow: "auto" }}>
+              {selectedWordInsight ? (
+                <>
+                  <div style={{ marginBottom: "var(--s3)" }}>
+                    <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em" }}>
+                      {selectedWordInsight.word}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "var(--c-text3)", marginTop: "2px" }}>
+                      在当前素材中出现 {selectedWordInsight.count} 次
+                    </div>
+                  </div>
+                  <div className="mini-list">
+                    {selectedWordInsight.examples.map((ex) => (
+                      <div className="mini-row" key={`${selectedWordInsight.word}-${ex.id}`}>
+                        <span>{formatTime(ex.start)}</span>
+                        <p>{ex.english}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="empty-note">在字幕中点击一个英文单词查看用法。</div>
+              )}
+            </div>
+          )}
+
+          {/* AI analysis tab */}
+          {toolTab === "analysis" && (
+            <div style={{ padding: "var(--s3) var(--s4)", flex: 1, overflow: "auto", display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
+              <button
+                className="ios-button secondary"
+                disabled={!resolvedAiRoutes.study_analysis}
+                type="button"
+                style={{ width: "100%" }}
+                onClick={() => runAiAnalysis("current")}
+              >
+                {resolvedAiRoutes.study_analysis ? "分析当前句" : "未配置 AI"}
+              </button>
+              {state.analytics.lastAiResult ? (
+                <pre className="assistant-output">{state.analytics.lastAiResult}</pre>
+              ) : (
+                <div className="empty-note">点击上方按钮生成当前句的 AI 深度讲解。</div>
+              )}
+            </div>
+          )}
+
+          {/* Pronunciation tab */}
+          {toolTab === "pronunciation" && (
+            <div style={{ padding: "var(--s3) var(--s4)", flex: 1, overflow: "auto", display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
+              <div className="button-row">
+                <button
+                  className="ios-button secondary"
+                  type="button"
+                  style={{ flex: 1 }}
+                  onClick={toggleRecording}
+                >
+                  {state.practice.recordingState === "recording" ? "结束录音" : "开始录音"}
+                </button>
+                <button
+                  className="ios-button ghost"
+                  disabled={!resolvedAiRoutes.speech_in || !currentRecording || isTranscribing}
+                  type="button"
+                  onClick={handleAiTranscription}
+                >
+                  {isTranscribing ? "转写中…" : "AI 转写"}
+                </button>
+              </div>
+              {currentRecording ? (
+                <audio controls src={currentRecording.url} style={{ width: "100%" }} />
+              ) : null}
+              {state.practice.aiTranscription ? (
+                <pre className="assistant-output">{state.practice.aiTranscription}</pre>
+              ) : (
+                <div className="empty-note">先录一段跟读音频，这里才会出现诊断结果。</div>
+              )}
+            </div>
+          )}
+        </aside>
       </div>
 
+      {/* ── Bottom controls ── */}
       <section className="player-reference-bottombar">
         <div className="player-bottom-left">
-          <button className="player-round-button" type="button" onClick={() => goRelative(-1)}>
-            ‹
-          </button>
-          <button className="player-round-button primary" disabled={!isReady} type="button" onClick={() => playerRef.current?.togglePlay()}>
+          <button className="player-round-button" type="button" onClick={() => goRelative(-1)}>‹</button>
+          <button
+            className="player-round-button primary"
+            disabled={!isReady}
+            type="button"
+            onClick={() => playerRef.current?.togglePlay()}
+          >
             {isPlaying ? "❚❚" : "▶"}
           </button>
-          <button className="player-round-button" type="button" onClick={() => goRelative(1)}>
-            ›
-          </button>
+          <button className="player-round-button" type="button" onClick={() => goRelative(1)}>›</button>
         </div>
 
         <div className="player-bottom-center">
@@ -454,7 +456,7 @@ export default function PlayerScreenV6() {
             type="button"
             onClick={handleAiSpeech}
           >
-            {isSynthesizing ? "生成中..." : "AI 朗读"}
+            {isSynthesizing ? "生成中…" : "AI 朗读"}
           </button>
           <button
             className="ios-button ghost"
@@ -466,31 +468,12 @@ export default function PlayerScreenV6() {
         </div>
 
         <div className="player-bottom-right">
-          {ttsAudioUrl ? <audio controls src={ttsAudioUrl} /> : null}
+          {ttsAudioUrl ? <audio controls src={ttsAudioUrl} style={{ height: "36px" }} /> : null}
           <button className="ios-button primary" type="button" onClick={toggleRecording}>
-            {state.practice.recordingState === "recording" ? "结束跟读" : "按住跟读"}
+            {state.practice.recordingState === "recording" ? "结束跟读" : "开始跟读"}
           </button>
         </div>
       </section>
-
-      {selectedWordInsight ? (
-        <section className="ios-card section-card reference-word-panel">
-          <div className="section-top">
-            <div>
-              <h2>词汇聚焦</h2>
-              <p>{selectedWordInsight.word} 在当前素材中出现 {selectedWordInsight.count} 次。</p>
-            </div>
-          </div>
-          <div className="mini-list">
-            {selectedWordInsight.examples.map((example) => (
-              <div className="mini-row" key={`${selectedWordInsight.word}-${example.id}`}>
-                <span>{formatTime(example.start)}</span>
-                <p>{example.english}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
     </div>
   );
 }
